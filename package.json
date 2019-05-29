@@ -1,0 +1,40 @@
+{
+  "name": "just-another-carousel",
+  "version": "1.0.0",
+  "description": "just another carousel",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && cat lib/carousel.module.css > dist/carousel.module.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snoel9537/just-another-carousel.git"
+  },
+  "keywords": [
+    "just",
+    "another",
+    "carousel",
+    "react",
+    "typescript"
+  ],
+  "author": "snoel9537",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/snoel9537/just-another-carousel/issues"
+  },
+  "homepage": "https://github.com/snoel9537/just-another-carousel#readme",
+  "dependencies": {
+    "classnames": "^2.2.6",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-on-screen": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/classnames": "^2.2.7",
+    "@types/react": "^16.8.18",
+    "@types/react-dom": "^16.8.4",
+    "typescript": "^3.4.5"
+  }
+}
