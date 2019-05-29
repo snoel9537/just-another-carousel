@@ -52,6 +52,6 @@ export default App
 
 MIT
 
-#Preview 
+## Preview 
 
-![just-another-carousel-demo.gif](https://i.ibb.co/FKLSx7J/just-another-carousel.gif)
+![just-another-carousel-demo.gif](https://s3.gifyu.com/images/just-another-carousel.gif)
