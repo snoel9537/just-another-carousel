@@ -1,7 +1,7 @@
 import * as React from 'react';
 export interface CarouselData {
     img: React.ReactNode;
-    caption: React.ReactNode;
+    caption?: React.ReactNode;
 }
 declare type CarouselItem = CarouselData & {
     id: string;
@@ -57,7 +57,7 @@ export declare class Carousel extends React.Component<ComponentProps, State> {
     }) => {
         id: string;
         img: React.ReactNode;
-        caption: React.ReactNode;
+        caption?: React.ReactNode;
     }[];
     componentDidMount(): void;
     componentDidUpdate(prevProps: ComponentProps): void;

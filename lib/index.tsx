@@ -4,7 +4,7 @@ import { IntervalHandler } from './interval-handler'
 
 export interface CarouselData {
   img: React.ReactNode
-  caption: React.ReactNode
+  caption?: React.ReactNode
 }
 
 type CarouselItem = CarouselData & { id: string }
