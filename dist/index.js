@@ -24,7 +24,6 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var classnames_1 = require("classnames");
 var React = require("react");
 var interval_handler_1 = require("./interval-handler");
 var Carousel = /** @class */ (function (_super) {
@@ -185,7 +184,6 @@ var Carousel = /** @class */ (function (_super) {
             React.createElement("div", { className: theme.itemsLine, ref: this.itemsRef },
                 React.createElement("div", { className: theme.moveLeft, onClick: this.moveLeft, style: moveBtnStyle }),
                 React.createElement("div", { className: theme.middle }, list.map(function (el, i) {
-                    var _a;
                     var isActive = _this.checkIfItemIsActive(i);
                     var isNeighbour = _this.checkIfItemIsActive(i + 1) ||
                         _this.checkIfItemIsActive(i - 1);
@@ -193,10 +191,7 @@ var Carousel = /** @class */ (function (_super) {
                     var marginLeft = -100 / size;
                     if (i === 0)
                         marginLeft = 0;
-                    return (React.createElement("div", { key: el.id, className: classnames_1.default(theme.item, (_a = {},
-                            _a[theme.active] = isActive,
-                            _a[theme.neighbour] = isNeighbour,
-                            _a)), style: {
+                    return (React.createElement("div", { key: el.id, className: theme.item + " " + (isActive ? theme.active : '') + " " + (isNeighbour ? theme.neighbour : ''), style: {
                             transform: "translateX(" + translateLeft + "%)",
                             marginLeft: marginLeft + "%",
                             flex: "0 0 " + 100 / size + "%"
@@ -206,17 +201,12 @@ var Carousel = /** @class */ (function (_super) {
                             React.createElement("div", { className: theme.caption }, el.caption))));
                 })),
                 React.createElement("div", { className: theme.moveRight, onClick: this.moveRight, style: moveBtnStyle })),
-            React.createElement("div", { className: theme.indicatorsLine }, this.props.data.map(function (_el, index) {
-                var _a;
-                return (React.createElement("div", { key: index, className: classnames_1.default(theme.indicator, (_a = {},
-                        _a[theme.currentIndicator] = index === activeDot,
-                        _a)), onClick: function () {
-                        if (index > activeDot)
-                            _this.moveRightAndRestartInterval();
-                        if (index < activeDot)
-                            _this.moveLeftAndRestartInterval();
-                    } }));
-            }))));
+            React.createElement("div", { className: theme.indicatorsLine }, this.props.data.map(function (_el, index) { return (React.createElement("div", { key: index, className: theme.indicator + " " + (index === activeDot ? theme.currentIndicator : ''), onClick: function () {
+                    if (index > activeDot)
+                        _this.moveRightAndRestartInterval();
+                    if (index < activeDot)
+                        _this.moveLeftAndRestartInterval();
+                } })); }))));
     };
     return Carousel;
 }(React.Component));

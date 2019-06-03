@@ -1,4 +1,3 @@
-import cn from 'classnames'
 import * as React from 'react'
 import { IntervalHandler } from './interval-handler'
 
@@ -273,10 +272,7 @@ export class Carousel extends React.Component<ComponentProps, State> {
               return (
                 <div
                   key={el.id}
-                  className={cn(theme.item, {
-                    [theme.active as any]: isActive,
-                    [theme.neighbour as any]: isNeighbour
-                  })}
+                  className={`${theme.item} ${isActive ? theme.active : ''} ${isNeighbour ? theme.neighbour : ''}`}
                   style={{
                     transform: `translateX(${translateLeft}%)`,
                     marginLeft: `${marginLeft}%`,
@@ -304,9 +300,7 @@ export class Carousel extends React.Component<ComponentProps, State> {
           {this.props.data.map((_el, index) => (
             <div
               key={index}
-              className={cn(theme.indicator, {
-                [theme.currentIndicator as any]: index === activeDot
-              })}
+              className={`${theme.indicator} ${index === activeDot ? theme.currentIndicator : ''}`}
               onClick={() => {
                 if (index > activeDot) this.moveRightAndRestartInterval()
 
