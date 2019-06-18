@@ -15,6 +15,8 @@ interface State {
   startTouchPosition: number
 }
 
+type Direction = 'moveLeft' | 'moveRight'
+
 interface OwnProps {
   data: CarouselData[]
   size: number // count of active items
@@ -23,7 +25,7 @@ interface OwnProps {
   autoSlide?: {
     // slide automatically
     interval: number
-    direction: 'moveLeft' | 'moveRight'
+    direction: Direction
   }
   theme: Partial<CarouselTheme>
 }
@@ -46,6 +48,20 @@ interface CarouselTheme {
 
 type ComponentProps = OwnProps
 
+type MoveStateDiff = Pick<State, 'list' | 'activeDot'>
+
+interface InitListArg {
+  data: CarouselData[]
+  size: number
+  aroundItemsCount: number
+  shift: number | undefined
+}
+
+interface GetOriginalItemByIndexArg {
+  data: CarouselData[]
+  index: number
+}
+
 export class Carousel extends React.Component<ComponentProps, State> {
   private itemsRef = React.createRef<HTMLDivElement>()
   private intervalHandlerRef = React.createRef<IntervalHandler>()
@@ -54,7 +70,7 @@ export class Carousel extends React.Component<ComponentProps, State> {
   constructor(props: ComponentProps) {
     super(props)
     const { size, data, shift } = props
-    const aroundItemsCount = 0
+    const aroundItemsCount = size
     this.state = {
       aroundItemsCount,
       list: this.initList({ aroundItemsCount, size, data, shift }),
@@ -67,14 +83,10 @@ export class Carousel extends React.Component<ComponentProps, State> {
   }
 
   getId = () =>
-    Date.now()
-      .toString()
-      .slice(-8) +
-    Math.random()
-      .toString(36)
-      .slice(2)
+    Date.now().toString().slice(-8) +
+    Math.random().toString(36).slice(2)
 
-  getOriginalItemByIndex = ({ data, index }: { data: CarouselData[], index: number }) => {
+  getOriginalItemByIndex = ({ data, index }: GetOriginalItemByIndexArg) => {
     let realIndex = index % data.length
     if (realIndex < 0) realIndex = data.length + realIndex
 
@@ -82,13 +94,9 @@ export class Carousel extends React.Component<ComponentProps, State> {
   }
 
   // generate list with surroundings and repeating
-  initList = ({ data, size, aroundItemsCount, shift }: {
-    data: CarouselData[]
-    size: number
-    aroundItemsCount: number
-    shift: number | undefined
-  }) => {
+  initList = ({ data, size, aroundItemsCount, shift }: InitListArg) => {
     let list = []
+
     for (let i = -aroundItemsCount; i < size + aroundItemsCount; i++) {
       const originalItem = this.getOriginalItemByIndex({ data, index: i })
       list.push({
@@ -97,9 +105,8 @@ export class Carousel extends React.Component<ComponentProps, State> {
       })
     }
 
-    if (shift) {
+    if (shift)
       list = [...list.slice(shift), ...list.slice(0, shift)]
-    }
 
     return list
   }
@@ -114,85 +121,99 @@ export class Carousel extends React.Component<ComponentProps, State> {
 
   reInitMounted = () => {
     const { size, data, shift } = this.props
-    if (
-      !this.itemsRef.current!.getClientRects()[0] ||
-      !window.document.body.getClientRects()[0]
-    )
+    if (!this.hasItemsRefWidth())
       return
 
-    const activeBlockWidth = this.itemsRef.current!.getClientRects()[0].width
-    const bodyWidth = window.document.body.getClientRects()[0].width
-    const oneSectionWidth = activeBlockWidth / size
-
-    const aroundItemsCount =
-      Math.trunc((bodyWidth - activeBlockWidth) / oneSectionWidth / 2) + 2
-
+    const aroundItemsCount = this.calculateAroundItemsCount()
     this.setState({
       aroundItemsCount,
       list: this.initList({ aroundItemsCount, size, data, shift })
     })
   }
 
+  hasItemsRefWidth = () =>
+    this.itemsRef.current!.getClientRects()[0] &&
+    window.document.body.getClientRects()[0]
+
+  calculateAroundItemsCount = (): number => {
+    const { size, data } = this.props
+    const activeBlockWidth = this.itemsRef.current!.getClientRects()[0].width
+    const bodyWidth = window.document.body.getClientRects()[0].width
+    const oneSectionWidth = activeBlockWidth / size
+    const sidesCount = 2
+    const leftSideAndRightSideWidth = bodyWidth - activeBlockWidth
+    const oneSidePicturesCount = Math.ceil(leftSideAndRightSideWidth / oneSectionWidth / sidesCount)
+    return (oneSidePicturesCount + data.length) * sidesCount
+  }
+
   getOriginalIndex = (item: CarouselItem) =>
-    this.props.data.findIndex(el => el.img === item.img)!
+    this.props.data.findIndex(el => el.img === item.img)
 
-  moveLeftStateDiff = () => {
-    const [first] = this.state.list
-    const nextFirst = {
-      ...this.getOriginalItemByIndex({
-        data: this.props.data,
-        index: this.getOriginalIndex(first) - 1
-      }),
-      id: this.getId()
-    }
-    const nextList = [nextFirst, ...this.state.list.slice(0, -1)]
+  secureLeftIndex = (index: number): number =>
+    index < 0
+      ? this.props.data.length - 1
+      : index
 
-    return {
-      list: nextList,
-      activeDot:
-        this.state.activeDot === 0
-          ? this.props.data.length - 1
-          : this.state.activeDot - 1
+  secureRightIndex = (index: number): number =>
+    index >= this.props.data.length
+      ? 0
+      : index
+
+  moveStateDiff = (insecureIndex: number): MoveStateDiff => {
+    const nextState: MoveStateDiff = {
+      activeDot: this.state.activeDot,
+      list: this.state.list
     }
+
+    const direction: Direction = insecureIndex < this.state.activeDot
+      ? 'moveLeft'
+      : 'moveRight'
+
+    const secureIndex = (direction === 'moveLeft')
+      ? this.secureLeftIndex(insecureIndex)
+      : this.secureRightIndex(insecureIndex)
+
+    while (secureIndex !== nextState.activeDot) {
+      if (direction === 'moveLeft') {
+        nextState.activeDot = this.secureLeftIndex(nextState.activeDot - 1)
+
+        const [first] = nextState.list
+        const nextFirst = {
+          ...this.getOriginalItemByIndex({
+            data: this.props.data,
+            index: this.getOriginalIndex(first) - 1
+          }),
+          id: this.getId()
+        }
+        nextState.list = [nextFirst, ...nextState.list.slice(0, -1)]
+      } else {
+        nextState.activeDot = this.secureRightIndex(nextState.activeDot + 1)
+
+        const [last] = nextState.list.slice(-1)
+        nextState.list = nextState.list.slice(1)
+        const nextLast = {
+          ...this.getOriginalItemByIndex({
+            data: this.props.data,
+            index: this.getOriginalIndex(last) + 1
+          }),
+          id: this.getId()
+        }
+        nextState.list.push(nextLast)
+      }
+    }
+
+    return nextState
   }
 
-  moveLeft = () => {
-    this.setState(this.moveLeftStateDiff())
-  }
+  moveLeft = () =>
+    this.setState(this.moveStateDiff(this.state.activeDot - 1))
 
-  moveLeftAndRestartInterval = () => {
+  moveRight = () =>
+    this.setState(this.moveStateDiff(this.state.activeDot + 1))
+
+  moveToIndexAndRestartInterval = (insecureIndex: number) => {
     this.stopInterval()
-    this.setState(this.moveLeftStateDiff(), this.startInterval)
-  }
-
-  moveRightStateDiff = () => {
-    const [last] = this.state.list.slice(-1)
-    const nextList = this.state.list.slice(1)
-    const nextLast = {
-      ...this.getOriginalItemByIndex({
-        data: this.props.data,
-        index: this.getOriginalIndex(last) + 1
-      }),
-      id: this.getId()
-    }
-    nextList.push(nextLast)
-
-    return {
-      list: nextList,
-      activeDot:
-        this.state.activeDot === this.props.data.length - 1
-          ? 0
-          : this.state.activeDot + 1
-    }
-  }
-
-  moveRight = () => {
-    this.setState(this.moveRightStateDiff())
-  }
-
-  moveRightAndRestartInterval = () => {
-    this.stopInterval()
-    this.setState(this.moveRightStateDiff(), this.startInterval)
+    this.setState(this.moveStateDiff(insecureIndex), this.startInterval)
   }
 
   checkIfItemIsActive = (index: number): boolean => {
@@ -301,11 +322,7 @@ export class Carousel extends React.Component<ComponentProps, State> {
             <div
               key={index}
               className={`${theme.indicator} ${index === activeDot ? theme.currentIndicator : ''}`}
-              onClick={() => {
-                if (index > activeDot) this.moveRightAndRestartInterval()
-
-                if (index < activeDot) this.moveLeftAndRestartInterval()
-              }}
+              onClick={() => this.moveToIndexAndRestartInterval(index)}
             />
           ))}
         </div>

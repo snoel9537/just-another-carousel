@@ -12,6 +12,7 @@ interface State {
     activeDot: number;
     startTouchPosition: number;
 }
+declare type Direction = 'moveLeft' | 'moveRight';
 interface OwnProps {
     data: CarouselData[];
     size: number;
@@ -19,7 +20,7 @@ interface OwnProps {
     defaultActiveDot?: number;
     autoSlide?: {
         interval: number;
-        direction: 'moveLeft' | 'moveRight';
+        direction: Direction;
     };
     theme: Partial<CarouselTheme>;
 }
@@ -39,22 +40,24 @@ interface CarouselTheme {
     moveRight: string;
 }
 declare type ComponentProps = OwnProps;
+interface InitListArg {
+    data: CarouselData[];
+    size: number;
+    aroundItemsCount: number;
+    shift: number | undefined;
+}
+interface GetOriginalItemByIndexArg {
+    data: CarouselData[];
+    index: number;
+}
 export declare class Carousel extends React.Component<ComponentProps, State> {
     private itemsRef;
     private intervalHandlerRef;
     private MINIMUM_SENSITIVE_MOVE;
     constructor(props: ComponentProps);
     getId: () => string;
-    getOriginalItemByIndex: ({ data, index }: {
-        data: CarouselData[];
-        index: number;
-    }) => CarouselData;
-    initList: ({ data, size, aroundItemsCount, shift }: {
-        data: CarouselData[];
-        size: number;
-        aroundItemsCount: number;
-        shift: number | undefined;
-    }) => {
+    getOriginalItemByIndex: ({ data, index }: GetOriginalItemByIndexArg) => CarouselData;
+    initList: ({ data, size, aroundItemsCount, shift }: InitListArg) => {
         id: string;
         img: React.ReactNode;
         caption?: React.ReactNode;
@@ -62,19 +65,15 @@ export declare class Carousel extends React.Component<ComponentProps, State> {
     componentDidMount(): void;
     componentDidUpdate(prevProps: ComponentProps): void;
     reInitMounted: () => void;
+    hasItemsRefWidth: () => ClientRect;
+    calculateAroundItemsCount: () => number;
     getOriginalIndex: (item: CarouselItem) => number;
-    moveLeftStateDiff: () => {
-        list: CarouselItem[];
-        activeDot: number;
-    };
+    secureLeftIndex: (index: number) => number;
+    secureRightIndex: (index: number) => number;
+    moveStateDiff: (insecureIndex: number) => Pick<State, "list" | "activeDot">;
     moveLeft: () => void;
-    moveLeftAndRestartInterval: () => void;
-    moveRightStateDiff: () => {
-        list: CarouselItem[];
-        activeDot: number;
-    };
     moveRight: () => void;
-    moveRightAndRestartInterval: () => void;
+    moveToIndexAndRestartInterval: (insecureIndex: number) => void;
     checkIfItemIsActive: (index: number) => boolean;
     onTouchStart: (e: any) => void;
     onTouchEnd: (e: any) => void;

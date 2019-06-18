@@ -34,12 +34,8 @@ var Carousel = /** @class */ (function (_super) {
         _this.intervalHandlerRef = React.createRef();
         _this.MINIMUM_SENSITIVE_MOVE = 30; // px
         _this.getId = function () {
-            return Date.now()
-                .toString()
-                .slice(-8) +
-                Math.random()
-                    .toString(36)
-                    .slice(2);
+            return Date.now().toString().slice(-8) +
+                Math.random().toString(36).slice(2);
         };
         _this.getOriginalItemByIndex = function (_a) {
             var data = _a.data, index = _a.index;
@@ -56,70 +52,90 @@ var Carousel = /** @class */ (function (_super) {
                 var originalItem = _this.getOriginalItemByIndex({ data: data, index: i });
                 list.push(__assign({}, originalItem, { id: _this.getId() }));
             }
-            if (shift) {
+            if (shift)
                 list = list.slice(shift).concat(list.slice(0, shift));
-            }
             return list;
         };
         _this.reInitMounted = function () {
             var _a = _this.props, size = _a.size, data = _a.data, shift = _a.shift;
-            if (!_this.itemsRef.current.getClientRects()[0] ||
-                !window.document.body.getClientRects()[0])
+            if (!_this.hasItemsRefWidth())
                 return;
-            var activeBlockWidth = _this.itemsRef.current.getClientRects()[0].width;
-            var bodyWidth = window.document.body.getClientRects()[0].width;
-            var oneSectionWidth = activeBlockWidth / size;
-            var aroundItemsCount = Math.trunc((bodyWidth - activeBlockWidth) / oneSectionWidth / 2) + 2;
+            var aroundItemsCount = _this.calculateAroundItemsCount();
             _this.setState({
                 aroundItemsCount: aroundItemsCount,
                 list: _this.initList({ aroundItemsCount: aroundItemsCount, size: size, data: data, shift: shift })
             });
         };
+        _this.hasItemsRefWidth = function () {
+            return _this.itemsRef.current.getClientRects()[0] &&
+                window.document.body.getClientRects()[0];
+        };
+        _this.calculateAroundItemsCount = function () {
+            var _a = _this.props, size = _a.size, data = _a.data;
+            var activeBlockWidth = _this.itemsRef.current.getClientRects()[0].width;
+            var bodyWidth = window.document.body.getClientRects()[0].width;
+            var oneSectionWidth = activeBlockWidth / size;
+            var sidesCount = 2;
+            var leftSideAndRightSideWidth = bodyWidth - activeBlockWidth;
+            var oneSidePicturesCount = Math.ceil(leftSideAndRightSideWidth / oneSectionWidth / sidesCount);
+            return (oneSidePicturesCount + data.length) * sidesCount;
+        };
         _this.getOriginalIndex = function (item) {
             return _this.props.data.findIndex(function (el) { return el.img === item.img; });
         };
-        _this.moveLeftStateDiff = function () {
-            var first = _this.state.list[0];
-            var nextFirst = __assign({}, _this.getOriginalItemByIndex({
-                data: _this.props.data,
-                index: _this.getOriginalIndex(first) - 1
-            }), { id: _this.getId() });
-            var nextList = [nextFirst].concat(_this.state.list.slice(0, -1));
-            return {
-                list: nextList,
-                activeDot: _this.state.activeDot === 0
-                    ? _this.props.data.length - 1
-                    : _this.state.activeDot - 1
+        _this.secureLeftIndex = function (index) {
+            return index < 0
+                ? _this.props.data.length - 1
+                : index;
+        };
+        _this.secureRightIndex = function (index) {
+            return index >= _this.props.data.length
+                ? 0
+                : index;
+        };
+        _this.moveStateDiff = function (insecureIndex) {
+            var nextState = {
+                activeDot: _this.state.activeDot,
+                list: _this.state.list
             };
+            var direction = insecureIndex < _this.state.activeDot
+                ? 'moveLeft'
+                : 'moveRight';
+            var secureIndex = (direction === 'moveLeft')
+                ? _this.secureLeftIndex(insecureIndex)
+                : _this.secureRightIndex(insecureIndex);
+            while (secureIndex !== nextState.activeDot) {
+                if (direction === 'moveLeft') {
+                    nextState.activeDot = _this.secureLeftIndex(nextState.activeDot - 1);
+                    var first = nextState.list[0];
+                    var nextFirst = __assign({}, _this.getOriginalItemByIndex({
+                        data: _this.props.data,
+                        index: _this.getOriginalIndex(first) - 1
+                    }), { id: _this.getId() });
+                    nextState.list = [nextFirst].concat(nextState.list.slice(0, -1));
+                }
+                else {
+                    nextState.activeDot = _this.secureRightIndex(nextState.activeDot + 1);
+                    var last = nextState.list.slice(-1)[0];
+                    nextState.list = nextState.list.slice(1);
+                    var nextLast = __assign({}, _this.getOriginalItemByIndex({
+                        data: _this.props.data,
+                        index: _this.getOriginalIndex(last) + 1
+                    }), { id: _this.getId() });
+                    nextState.list.push(nextLast);
+                }
+            }
+            return nextState;
         };
         _this.moveLeft = function () {
-            _this.setState(_this.moveLeftStateDiff());
-        };
-        _this.moveLeftAndRestartInterval = function () {
-            _this.stopInterval();
-            _this.setState(_this.moveLeftStateDiff(), _this.startInterval);
-        };
-        _this.moveRightStateDiff = function () {
-            var last = _this.state.list.slice(-1)[0];
-            var nextList = _this.state.list.slice(1);
-            var nextLast = __assign({}, _this.getOriginalItemByIndex({
-                data: _this.props.data,
-                index: _this.getOriginalIndex(last) + 1
-            }), { id: _this.getId() });
-            nextList.push(nextLast);
-            return {
-                list: nextList,
-                activeDot: _this.state.activeDot === _this.props.data.length - 1
-                    ? 0
-                    : _this.state.activeDot + 1
-            };
+            return _this.setState(_this.moveStateDiff(_this.state.activeDot - 1));
         };
         _this.moveRight = function () {
-            _this.setState(_this.moveRightStateDiff());
+            return _this.setState(_this.moveStateDiff(_this.state.activeDot + 1));
         };
-        _this.moveRightAndRestartInterval = function () {
+        _this.moveToIndexAndRestartInterval = function (insecureIndex) {
             _this.stopInterval();
-            _this.setState(_this.moveRightStateDiff(), _this.startInterval);
+            _this.setState(_this.moveStateDiff(insecureIndex), _this.startInterval);
         };
         _this.checkIfItemIsActive = function (index) {
             var _a = _this.state, list = _a.list, aroundItemsCount = _a.aroundItemsCount;
@@ -152,7 +168,7 @@ var Carousel = /** @class */ (function (_super) {
                 _this.intervalHandlerRef.current.startInterval();
         };
         var size = props.size, data = props.data, shift = props.shift;
-        var aroundItemsCount = 0;
+        var aroundItemsCount = size;
         _this.state = {
             aroundItemsCount: aroundItemsCount,
             list: _this.initList({ aroundItemsCount: aroundItemsCount, size: size, data: data, shift: shift }),
@@ -201,12 +217,7 @@ var Carousel = /** @class */ (function (_super) {
                             React.createElement("div", { className: theme.caption }, el.caption))));
                 })),
                 React.createElement("div", { className: theme.moveRight, onClick: this.moveRight, style: moveBtnStyle })),
-            React.createElement("div", { className: theme.indicatorsLine }, this.props.data.map(function (_el, index) { return (React.createElement("div", { key: index, className: theme.indicator + " " + (index === activeDot ? theme.currentIndicator : ''), onClick: function () {
-                    if (index > activeDot)
-                        _this.moveRightAndRestartInterval();
-                    if (index < activeDot)
-                        _this.moveLeftAndRestartInterval();
-                } })); }))));
+            React.createElement("div", { className: theme.indicatorsLine }, this.props.data.map(function (_el, index) { return (React.createElement("div", { key: index, className: theme.indicator + " " + (index === activeDot ? theme.currentIndicator : ''), onClick: function () { return _this.moveToIndexAndRestartInterval(index); } })); }))));
     };
     return Carousel;
 }(React.Component));
