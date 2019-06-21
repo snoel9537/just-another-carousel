@@ -1,6 +1,6 @@
 {
   "name": "just-another-carousel",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "just another carousel",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -116,7 +116,14 @@ export class Carousel extends React.Component<ComponentProps, State> {
   }
 
   componentDidUpdate(prevProps: ComponentProps) {
-    if (prevProps.size !== this.props.size) this.reInitMounted()
+    if (this.shouldReInit(prevProps))
+      this.reInitMounted()
+  }
+
+  shouldReInit = (prevProps: ComponentProps) => {
+    const sizeChanged = prevProps.size !== this.props.size
+    const lengthChanged = prevProps.data.length !== this.props.data.length
+    return sizeChanged || lengthChanged
   }
 
   reInitMounted = () => {

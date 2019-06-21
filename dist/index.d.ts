@@ -64,6 +64,7 @@ export declare class Carousel extends React.Component<ComponentProps, State> {
     }[];
     componentDidMount(): void;
     componentDidUpdate(prevProps: ComponentProps): void;
+    shouldReInit: (prevProps: OwnProps) => boolean;
     reInitMounted: () => void;
     hasItemsRefWidth: () => ClientRect;
     calculateAroundItemsCount: () => number;

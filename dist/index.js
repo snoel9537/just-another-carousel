@@ -56,6 +56,11 @@ var Carousel = /** @class */ (function (_super) {
                 list = list.slice(shift).concat(list.slice(0, shift));
             return list;
         };
+        _this.shouldReInit = function (prevProps) {
+            var sizeChanged = prevProps.size !== _this.props.size;
+            var lengthChanged = prevProps.data.length !== _this.props.data.length;
+            return sizeChanged || lengthChanged;
+        };
         _this.reInitMounted = function () {
             var _a = _this.props, size = _a.size, data = _a.data, shift = _a.shift;
             if (!_this.hasItemsRefWidth())
@@ -183,7 +188,7 @@ var Carousel = /** @class */ (function (_super) {
         this.reInitMounted();
     };
     Carousel.prototype.componentDidUpdate = function (prevProps) {
-        if (prevProps.size !== this.props.size)
+        if (this.shouldReInit(prevProps))
             this.reInitMounted();
     };
     Carousel.prototype.render = function () {
