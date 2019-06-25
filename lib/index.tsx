@@ -17,6 +17,12 @@ interface State {
 
 type Direction = 'moveLeft' | 'moveRight'
 
+interface OnMoveDescription {
+  direction: Direction
+  prevIndex: number
+  currentIndex: number
+}
+
 interface OwnProps {
   data: CarouselData[]
   size: number // count of active items
@@ -28,6 +34,7 @@ interface OwnProps {
     direction: Direction
   }
   theme: Partial<CarouselTheme>
+  onMove?: (description: OnMoveDescription) => any
 }
 
 interface CarouselTheme {
@@ -48,7 +55,10 @@ interface CarouselTheme {
 
 type ComponentProps = OwnProps
 
-type MoveStateDiff = Pick<State, 'list' | 'activeDot'>
+interface MoveStateDiff {
+  nextState: Pick<State, 'list' | 'activeDot'>
+  direction: Direction
+}
 
 interface InitListArg {
   data: CarouselData[]
@@ -167,7 +177,7 @@ export class Carousel extends React.Component<ComponentProps, State> {
       : index
 
   moveStateDiff = (insecureIndex: number): MoveStateDiff => {
-    const nextState: MoveStateDiff = {
+    const nextState: MoveStateDiff['nextState'] = {
       activeDot: this.state.activeDot,
       list: this.state.list
     }
@@ -209,18 +219,39 @@ export class Carousel extends React.Component<ComponentProps, State> {
       }
     }
 
-    return nextState
+    return {
+      nextState,
+      direction
+    }
   }
 
   moveLeft = () =>
-    this.setState(this.moveStateDiff(this.state.activeDot - 1))
+    this.moveAndCallback(this.moveStateDiff(this.state.activeDot - 1))
 
   moveRight = () =>
-    this.setState(this.moveStateDiff(this.state.activeDot + 1))
+    this.moveAndCallback(this.moveStateDiff(this.state.activeDot + 1))
 
   moveToIndexAndRestartInterval = (insecureIndex: number) => {
     this.stopInterval()
-    this.setState(this.moveStateDiff(insecureIndex), this.startInterval)
+    this.moveAndCallback(this.moveStateDiff(insecureIndex), this.startInterval)
+  }
+
+  moveAndCallback = ({ nextState, direction }: MoveStateDiff, setStateCallback?: (() => void)) => {
+    const prevIndex = this.state.activeDot
+
+    this.setState(nextState, () => {
+      if (setStateCallback) {
+        setStateCallback()
+      }
+    })
+
+    if (this.props.onMove) {
+      this.props.onMove({
+        currentIndex: nextState.activeDot,
+        prevIndex,
+        direction
+      })
+    }
   }
 
   checkIfItemIsActive = (index: number): boolean => {

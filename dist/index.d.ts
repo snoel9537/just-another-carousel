@@ -13,6 +13,11 @@ interface State {
     startTouchPosition: number;
 }
 declare type Direction = 'moveLeft' | 'moveRight';
+interface OnMoveDescription {
+    direction: Direction;
+    prevIndex: number;
+    currentIndex: number;
+}
 interface OwnProps {
     data: CarouselData[];
     size: number;
@@ -23,6 +28,7 @@ interface OwnProps {
         direction: Direction;
     };
     theme: Partial<CarouselTheme>;
+    onMove?: (description: OnMoveDescription) => any;
 }
 interface CarouselTheme {
     active: string;
@@ -40,6 +46,10 @@ interface CarouselTheme {
     moveRight: string;
 }
 declare type ComponentProps = OwnProps;
+interface MoveStateDiff {
+    nextState: Pick<State, 'list' | 'activeDot'>;
+    direction: Direction;
+}
 interface InitListArg {
     data: CarouselData[];
     size: number;
@@ -71,10 +81,11 @@ export declare class Carousel extends React.Component<ComponentProps, State> {
     getOriginalIndex: (item: CarouselItem) => number;
     secureLeftIndex: (index: number) => number;
     secureRightIndex: (index: number) => number;
-    moveStateDiff: (insecureIndex: number) => Pick<State, "list" | "activeDot">;
+    moveStateDiff: (insecureIndex: number) => MoveStateDiff;
     moveLeft: () => void;
     moveRight: () => void;
     moveToIndexAndRestartInterval: (insecureIndex: number) => void;
+    moveAndCallback: ({ nextState, direction }: MoveStateDiff, setStateCallback?: (() => void) | undefined) => void;
     checkIfItemIsActive: (index: number) => boolean;
     onTouchStart: (e: any) => void;
     onTouchEnd: (e: any) => void;

@@ -130,17 +130,36 @@ var Carousel = /** @class */ (function (_super) {
                     nextState.list.push(nextLast);
                 }
             }
-            return nextState;
+            return {
+                nextState: nextState,
+                direction: direction
+            };
         };
         _this.moveLeft = function () {
-            return _this.setState(_this.moveStateDiff(_this.state.activeDot - 1));
+            return _this.moveAndCallback(_this.moveStateDiff(_this.state.activeDot - 1));
         };
         _this.moveRight = function () {
-            return _this.setState(_this.moveStateDiff(_this.state.activeDot + 1));
+            return _this.moveAndCallback(_this.moveStateDiff(_this.state.activeDot + 1));
         };
         _this.moveToIndexAndRestartInterval = function (insecureIndex) {
             _this.stopInterval();
-            _this.setState(_this.moveStateDiff(insecureIndex), _this.startInterval);
+            _this.moveAndCallback(_this.moveStateDiff(insecureIndex), _this.startInterval);
+        };
+        _this.moveAndCallback = function (_a, setStateCallback) {
+            var nextState = _a.nextState, direction = _a.direction;
+            var prevIndex = _this.state.activeDot;
+            _this.setState(nextState, function () {
+                if (setStateCallback) {
+                    setStateCallback();
+                }
+            });
+            if (_this.props.onMove) {
+                _this.props.onMove({
+                    currentIndex: nextState.activeDot,
+                    prevIndex: prevIndex,
+                    direction: direction
+                });
+            }
         };
         _this.checkIfItemIsActive = function (index) {
             var _a = _this.state, list = _a.list, aroundItemsCount = _a.aroundItemsCount;
