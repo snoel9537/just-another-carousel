@@ -59,7 +59,8 @@ var Carousel = /** @class */ (function (_super) {
         _this.shouldReInit = function (prevProps) {
             var sizeChanged = prevProps.size !== _this.props.size;
             var lengthChanged = prevProps.data.length !== _this.props.data.length;
-            return sizeChanged || lengthChanged;
+            var shiftChanged = prevProps.shift !== _this.props.shift;
+            return sizeChanged || lengthChanged || shiftChanged;
         };
         _this.reInitMounted = function () {
             var _a = _this.props, size = _a.size, data = _a.data, shift = _a.shift;

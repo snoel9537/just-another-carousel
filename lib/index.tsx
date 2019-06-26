@@ -133,7 +133,8 @@ export class Carousel extends React.Component<ComponentProps, State> {
   shouldReInit = (prevProps: ComponentProps) => {
     const sizeChanged = prevProps.size !== this.props.size
     const lengthChanged = prevProps.data.length !== this.props.data.length
-    return sizeChanged || lengthChanged
+    const shiftChanged = prevProps.shift !== this.props.shift
+    return sizeChanged || lengthChanged || shiftChanged
   }
 
   reInitMounted = () => {
