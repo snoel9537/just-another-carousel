@@ -67,6 +67,8 @@ var Carousel = /** @class */ (function (_super) {
             if (!_this.hasItemsRefWidth())
                 return;
             var aroundItemsCount = _this.calculateAroundItemsCount();
+            if (aroundItemsCount === _this.state.aroundItemsCount)
+                return;
             _this.setState({
                 aroundItemsCount: aroundItemsCount,
                 list: _this.initList({ aroundItemsCount: aroundItemsCount, size: size, data: data, shift: shift })
@@ -84,7 +86,9 @@ var Carousel = /** @class */ (function (_super) {
             var sidesCount = 2;
             var leftSideAndRightSideWidth = bodyWidth - activeBlockWidth;
             var oneSidePicturesCount = Math.ceil(leftSideAndRightSideWidth / oneSectionWidth / sidesCount);
-            return (oneSidePicturesCount + data.length) * sidesCount;
+            var visiblePicturesCount = oneSidePicturesCount * sidesCount + size;
+            var copiesCount = Math.max(visiblePicturesCount, data.length);
+            return copiesCount;
         };
         _this.getOriginalIndex = function (item) {
             return _this.props.data.findIndex(function (el) { return el.img === item.img; });
@@ -193,7 +197,7 @@ var Carousel = /** @class */ (function (_super) {
                 _this.intervalHandlerRef.current.startInterval();
         };
         var size = props.size, data = props.data, shift = props.shift;
-        var aroundItemsCount = size;
+        var aroundItemsCount = Math.max(size, data.length);
         _this.state = {
             aroundItemsCount: aroundItemsCount,
             list: _this.initList({ aroundItemsCount: aroundItemsCount, size: size, data: data, shift: shift }),

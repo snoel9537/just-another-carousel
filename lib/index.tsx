@@ -6,7 +6,9 @@ export interface CarouselData {
   caption?: React.ReactNode
 }
 
-type CarouselItem = CarouselData & { id: string }
+interface CarouselItem extends CarouselData {
+  id: string
+}
 
 interface State {
   aroundItemsCount: number
@@ -80,7 +82,7 @@ export class Carousel extends React.Component<ComponentProps, State> {
   constructor(props: ComponentProps) {
     super(props)
     const { size, data, shift } = props
-    const aroundItemsCount = size
+    const aroundItemsCount = Math.max(size, data.length)
     this.state = {
       aroundItemsCount,
       list: this.initList({ aroundItemsCount, size, data, shift }),
@@ -143,6 +145,9 @@ export class Carousel extends React.Component<ComponentProps, State> {
       return
 
     const aroundItemsCount = this.calculateAroundItemsCount()
+    if (aroundItemsCount === this.state.aroundItemsCount)
+      return
+
     this.setState({
       aroundItemsCount,
       list: this.initList({ aroundItemsCount, size, data, shift })
@@ -161,7 +166,9 @@ export class Carousel extends React.Component<ComponentProps, State> {
     const sidesCount = 2
     const leftSideAndRightSideWidth = bodyWidth - activeBlockWidth
     const oneSidePicturesCount = Math.ceil(leftSideAndRightSideWidth / oneSectionWidth / sidesCount)
-    return (oneSidePicturesCount + data.length) * sidesCount
+    const visiblePicturesCount = oneSidePicturesCount * sidesCount + size
+    const copiesCount = Math.max(visiblePicturesCount, data.length)
+    return copiesCount
   }
 
   getOriginalIndex = (item: CarouselItem) =>

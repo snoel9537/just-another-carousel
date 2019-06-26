@@ -3,9 +3,9 @@ export interface CarouselData {
     img: React.ReactNode;
     caption?: React.ReactNode;
 }
-declare type CarouselItem = CarouselData & {
+interface CarouselItem extends CarouselData {
     id: string;
-};
+}
 interface State {
     aroundItemsCount: number;
     list: CarouselItem[];
