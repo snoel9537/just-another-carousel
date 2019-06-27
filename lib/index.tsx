@@ -1,14 +1,13 @@
 import * as React from 'react'
+import { Component, ReactNode, createRef } from 'react'
 import { IntervalHandler } from './interval-handler'
 
 export interface CarouselData {
-  img: React.ReactNode
-  caption?: React.ReactNode
+  img: ReactNode
+  caption?: ReactNode
 }
 
-interface CarouselItem extends CarouselData {
-  id: string
-}
+type CarouselItem = CarouselData & { id: string }
 
 interface State {
   aroundItemsCount: number
@@ -30,6 +29,7 @@ interface OwnProps {
   size: number // count of active items
   shift?: number // move initial list
   defaultActiveDot?: number // default is middle dot
+  defaultAroundItemsCount?: number
   autoSlide?: {
     // slide automatically
     interval: number
@@ -74,15 +74,15 @@ interface GetOriginalItemByIndexArg {
   index: number
 }
 
-export class Carousel extends React.Component<ComponentProps, State> {
-  private itemsRef = React.createRef<HTMLDivElement>()
-  private intervalHandlerRef = React.createRef<IntervalHandler>()
+export class Carousel extends Component<ComponentProps, State> {
+  private itemsRef = createRef<HTMLDivElement>()
+  private intervalHandlerRef = createRef<IntervalHandler>()
   private MINIMUM_SENSITIVE_MOVE = 30 // px
 
   constructor(props: ComponentProps) {
     super(props)
-    const { size, data, shift } = props
-    const aroundItemsCount = Math.max(size, data.length)
+    const { size, data, shift, defaultAroundItemsCount } = props
+    const aroundItemsCount = defaultAroundItemsCount !== undefined  ? defaultAroundItemsCount : size
     this.state = {
       aroundItemsCount,
       list: this.initList({ aroundItemsCount, size, data, shift }),
@@ -140,8 +140,11 @@ export class Carousel extends React.Component<ComponentProps, State> {
   }
 
   reInitMounted = () => {
-    const { size, data, shift } = this.props
+    const { size, data, shift, defaultAroundItemsCount } = this.props
     if (!this.hasItemsRefWidth())
+      return
+
+    if (defaultAroundItemsCount)
       return
 
     const aroundItemsCount = this.calculateAroundItemsCount()
@@ -176,12 +179,12 @@ export class Carousel extends React.Component<ComponentProps, State> {
 
   secureLeftIndex = (index: number): number =>
     index < 0
-      ? this.props.data.length - 1
+      ? this.props.data.length + index
       : index
 
   secureRightIndex = (index: number): number =>
     index >= this.props.data.length
-      ? 0
+      ? index % this.props.data.length
       : index
 
   moveStateDiff = (insecureIndex: number): MoveStateDiff => {

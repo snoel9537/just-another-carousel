@@ -25,13 +25,14 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = require("react");
+var react_1 = require("react");
 var interval_handler_1 = require("./interval-handler");
 var Carousel = /** @class */ (function (_super) {
     __extends(Carousel, _super);
     function Carousel(props) {
         var _this = _super.call(this, props) || this;
-        _this.itemsRef = React.createRef();
-        _this.intervalHandlerRef = React.createRef();
+        _this.itemsRef = react_1.createRef();
+        _this.intervalHandlerRef = react_1.createRef();
         _this.MINIMUM_SENSITIVE_MOVE = 30; // px
         _this.getId = function () {
             return Date.now().toString().slice(-8) +
@@ -59,12 +60,13 @@ var Carousel = /** @class */ (function (_super) {
         _this.shouldReInit = function (prevProps) {
             var sizeChanged = prevProps.size !== _this.props.size;
             var lengthChanged = prevProps.data.length !== _this.props.data.length;
-            var shiftChanged = prevProps.shift !== _this.props.shift;
-            return sizeChanged || lengthChanged || shiftChanged;
+            return sizeChanged || lengthChanged;
         };
         _this.reInitMounted = function () {
-            var _a = _this.props, size = _a.size, data = _a.data, shift = _a.shift;
+            var _a = _this.props, size = _a.size, data = _a.data, shift = _a.shift, defaultAroundItemsCount = _a.defaultAroundItemsCount;
             if (!_this.hasItemsRefWidth())
+                return;
+            if (defaultAroundItemsCount)
                 return;
             var aroundItemsCount = _this.calculateAroundItemsCount();
             if (aroundItemsCount === _this.state.aroundItemsCount)
@@ -86,21 +88,19 @@ var Carousel = /** @class */ (function (_super) {
             var sidesCount = 2;
             var leftSideAndRightSideWidth = bodyWidth - activeBlockWidth;
             var oneSidePicturesCount = Math.ceil(leftSideAndRightSideWidth / oneSectionWidth / sidesCount);
-            var visiblePicturesCount = oneSidePicturesCount * sidesCount + size;
-            var copiesCount = Math.max(visiblePicturesCount, data.length);
-            return copiesCount;
+            return (oneSidePicturesCount + data.length) * sidesCount;
         };
         _this.getOriginalIndex = function (item) {
             return _this.props.data.findIndex(function (el) { return el.img === item.img; });
         };
         _this.secureLeftIndex = function (index) {
             return index < 0
-                ? _this.props.data.length - 1
+                ? _this.props.data.length + index
                 : index;
         };
         _this.secureRightIndex = function (index) {
             return index >= _this.props.data.length
-                ? 0
+                ? index % _this.props.data.length
                 : index;
         };
         _this.moveStateDiff = function (insecureIndex) {
@@ -196,8 +196,8 @@ var Carousel = /** @class */ (function (_super) {
             if (_this.intervalHandlerRef.current)
                 _this.intervalHandlerRef.current.startInterval();
         };
-        var size = props.size, data = props.data, shift = props.shift;
-        var aroundItemsCount = Math.max(size, data.length);
+        var size = props.size, data = props.data, shift = props.shift, defaultAroundItemsCount = props.defaultAroundItemsCount;
+        var aroundItemsCount = defaultAroundItemsCount !== undefined ? defaultAroundItemsCount : size;
         _this.state = {
             aroundItemsCount: aroundItemsCount,
             list: _this.initList({ aroundItemsCount: aroundItemsCount, size: size, data: data, shift: shift }),
@@ -249,5 +249,5 @@ var Carousel = /** @class */ (function (_super) {
             React.createElement("div", { className: theme.indicatorsLine }, this.props.data.map(function (_el, index) { return (React.createElement("div", { key: index, className: theme.indicator + " " + (index === activeDot ? theme.currentIndicator : ''), onClick: function () { return _this.moveToIndexAndRestartInterval(index); } })); }))));
     };
     return Carousel;
-}(React.Component));
+}(react_1.Component));
 exports.Carousel = Carousel;

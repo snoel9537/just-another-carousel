@@ -1,11 +1,12 @@
 import * as React from 'react';
+import { Component, ReactNode } from 'react';
 export interface CarouselData {
-    img: React.ReactNode;
-    caption?: React.ReactNode;
+    img: ReactNode;
+    caption?: ReactNode;
 }
-interface CarouselItem extends CarouselData {
+declare type CarouselItem = CarouselData & {
     id: string;
-}
+};
 interface State {
     aroundItemsCount: number;
     list: CarouselItem[];
@@ -23,6 +24,7 @@ interface OwnProps {
     size: number;
     shift?: number;
     defaultActiveDot?: number;
+    defaultAroundItemsCount?: number;
     autoSlide?: {
         interval: number;
         direction: Direction;
@@ -60,7 +62,7 @@ interface GetOriginalItemByIndexArg {
     data: CarouselData[];
     index: number;
 }
-export declare class Carousel extends React.Component<ComponentProps, State> {
+export declare class Carousel extends Component<ComponentProps, State> {
     private itemsRef;
     private intervalHandlerRef;
     private MINIMUM_SENSITIVE_MOVE;
